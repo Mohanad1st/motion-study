@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Motion Study — {{ video_name }}</title>
+<style>
+  :root {
+    --ink: #16191d; --muted: #5d666f; --line: #e2e6ea;
+    --bg: #ffffff; --panel: #f7f9fb; --accent: #0072B2; --warn: #b45309;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.55 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 22px 70px; }
+  header { border-bottom: 3px solid var(--ink); padding-bottom: 16px; margin-bottom: 26px; }
+  h1 { margin: 0 0 6px; font-size: 25px; letter-spacing: -0.3px; }
+  .sub { color: var(--muted); font-size: 14px; }
+  h2 {
+    font-size: 19px; margin: 40px 0 6px;
+    border-left: 4px solid var(--accent); padding-left: 10px;
+  }
+  .lede { color: var(--muted); margin: 0 0 14px; font-size: 14px; max-width: 78ch; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 12px; margin: 22px 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 13px 15px; }
+  .card .v { font-size: 25px; font-weight: 650; letter-spacing: -0.5px; }
+  .card .k { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.55px; margin-top: 3px; }
+
+  table.data { border-collapse: collapse; width: 100%; font-size: 13.5px; margin-top: 8px; }
+  table.data th, table.data td { border-bottom: 1px solid var(--line); padding: 7px 10px; text-align: left; }
+  table.data th { background: var(--panel); font-weight: 620; white-space: nowrap; }
+  table.data tr:hover td { background: #fbfcfd; }
+  .scroll { overflow-x: auto; }
+  .empty { color: var(--muted); font-style: italic; }
+
+  .tabs { display: flex; gap: 6px; margin: 10px 0 4px; }
+  .tabs button {
+    font: inherit; font-size: 13.5px; padding: 6px 14px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--panel); border-radius: 7px; color: var(--muted);
+  }
+  .tabs button.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .pane { display: none; }
+  .pane.on { display: block; }
+
+  .note {
+    background: #fff8e6; border: 1px solid #f0d9a0; border-left: 4px solid var(--warn);
+    padding: 11px 14px; border-radius: 7px; margin: 14px 0; font-size: 13.5px;
+  }
+  .legend-key { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .legend-key b { color: var(--ink); }
+  footer { margin-top: 52px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; }
+  @media print { .tabs { display: none; } .pane { display: block !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Motion &amp; Time Study — {{ video_name }}</h1>
+  <div class="sub">
+    Camera <b>{{ camera_id }}</b>{% if description %} · {{ description }}{% endif %}
+    · Recording length {{ duration_hms }} · Generated {{ generated_at }}
+  </div>
+</header>
+
+{% if warnings %}
+  {% for w in warnings %}<div class="note">{{ w }}</div>{% endfor %}
+{% endif %}
+
+<div class="cards">
+  <div class="card"><div class="v">{{ headline.workers }}</div><div class="k">Workers</div></div>
+  <div class="card"><div class="v">{{ "%.0f"|format(headline.mean_utilisation) }}%</div><div class="k">Mean utilisation</div></div>
+  <div class="card"><div class="v">{{ headline.distinct_steps }}</div><div class="k">Work elements</div></div>
+  <div class="card"><div class="v">{{ headline.total_stops }}</div><div class="k">Stops detected</div></div>
+  <div class="card"><div class="v">{{ "%.0f"|format(headline.total_stop_s) }}s</div><div class="k">Total idle at station</div></div>
+  <div class="card"><div class="v">{{ "%.0f"|format(headline.total_walking_s) }}s</div><div class="k">Total walking</div></div>
+</div>
+
+<h2>Operation timeline</h2>
+<p class="lede">
+  Each row is one worker across the real clock of the operation. Bar colour identifies
+  the employee; texture identifies the activity — solid is working at a station,
+  hatched is walking, faded is away.
+</p>
+<div class="legend-key">
+  <b>■ amber square</b> = stopped (present at the station but not moving for
+  {{ stop_min_seconds }}s or more) &nbsp;·&nbsp;
+  <b>✖ red cross</b> = left (out of view). Hover any bar or marker for exact times.
+</div>
+<div class="tabs">
+  <button class="on" onclick="tab(this,'g1')">Colour by employee</button>
+  <button onclick="tab(this,'g2')">Colour by work element</button>
+</div>
+<div id="g1" class="pane on">{{ gantt_worker|safe }}</div>
+<div id="g2" class="pane">{{ gantt_step|safe }}</div>
+
+<h2>Work element times</h2>
+<p class="lede">
+  Read the <b>cv_percent</b> column first. It is the spread as a percentage of the
+  average, so it flags the <em>inconsistent</em> steps — which is usually where
+  recoverable time is hiding, more so than the merely slow ones.
+  <br><b>normal_s</b> = mean × rating factor {{ rating_factor }}.
+  <b>standard_s</b> = normal + {{ "%.0f"|format(allowance_percent) }}% allowances.
+</p>
+<div class="scroll">{{ table_steps|safe }}</div>
+
+<h2>Where each worker's time went</h2>
+<p class="lede">
+  Utilisation is time at a work station as a share of time on camera — not of the whole
+  recording, so a worker who appears late is not penalised for it.
+</p>
+<div class="scroll">{{ table_workers|safe }}</div>
+
+<h2>Cycle times</h2>
+<div class="scroll">{{ table_cycles|safe }}</div>
+
+<h2>Labour balance (Yamazumi)</h2>
+<p class="lede">
+  Work content per operator, per cycle. Uneven columns mean the line is unbalanced:
+  the tallest column sets the pace and every shorter one is waiting.
+</p>
+{{ yamazumi|safe }}
+
+<h2>Movement paths (spaghetti diagram)</h2>
+<p class="lede">Every worker's floor path over the whole recording. Dense tangles are walking that the layout is forcing.</p>
+{{ spaghetti|safe }}
+
+<h2>Event log</h2>
+<p class="lede">Every stop and departure, in order.</p>
+<div class="scroll">{{ table_events|safe }}</div>
+
+<footer>
+  Analysed at {{ analysis_fps }} fps (pose {{ pose_fps }} fps).
+  A worker counts as stopped below {{ stop_threshold }} body-heights/second of hand
+  movement for {{ stop_min_seconds }}s or more.
+  <br>
+  The <b>rating factor of {{ rating_factor }}</b> was entered by a human observer — this
+  system does not estimate worker pace, and no standard time here is valid without a
+  qualified observer standing behind that number.
+</footer>
+
+</div>
+<script>
+function tab(btn, id) {
+  var tabs = btn.parentNode.querySelectorAll('button');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('on');
+  btn.classList.add('on');
+  var panes = document.querySelectorAll('.pane');
+  for (var j = 0; j < panes.length; j++) panes[j].classList.remove('on');
+  var el = document.getElementById(id);
+  el.classList.add('on');
+  // Plotly sizes to a hidden container as zero-width; nudge it once shown.
+  if (window.Plotly) {
+    var plots = el.querySelectorAll('.js-plotly-plot');
+    for (var k = 0; k < plots.length; k++) window.Plotly.Plots.resize(plots[k]);
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+# Employee footage and analysis outputs NEVER get committed.
+input/
+runs/
+*.mp4
+*.mov
+*.avi
+*.mkv
+
+# Model weights (auto-downloaded on first run)
+models/
+*.onnx
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store

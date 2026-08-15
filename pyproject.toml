@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mstudy"
+version = "0.1.0"
+description = "Video-based motion and time study for steel scaffolding manufacturing"
+requires-python = ">=3.11"
+dependencies = [
+    "rtmlib",
+    "onnxruntime",
+    "opencv-python",
+    "supervision",
+    "numpy",
+    "pandas",
+    "pyarrow",
+    "plotly",
+    "jinja2",
+    "pyyaml",
+    "typer",
+    "rich",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+mstudy = "mstudy.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+mstudy = ["templates/*.jinja"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
