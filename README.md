@@ -33,7 +33,9 @@ Per video, in `runs\<video-name>\`:
 | File | What it is |
 |---|---|
 | `report.html` | The deliverable. Self-contained, opens offline. |
+| `steps.txt` | Plain-text breakdown: every step, in order, with its time. |
 | `segments.csv` | Every worker/activity/start/end/duration — pivot this in Excel. |
+| `standard_work_combination.csv` | SWCT rows: manual / auto-wait / walk per element. |
 | `stops.csv`, `cycles.csv`, `step_statistics.csv`, `worker_statistics.csv` | Raw tables. |
 | `events.jsonl` | Machine-readable event stream. |
 | `annotated.mp4` | The video with names, steps and a clock burned in (optional). |
@@ -41,8 +43,16 @@ Per video, in `runs\<video-name>\`:
 | `run.json` | Config fingerprint and versions, so any report can be reproduced. |
 
 The report contains a multi-worker **Gantt chart** (colour per employee,
-**■** = stopped, **✖** = left), work-element statistics with spread, a
+**■** = stopped, **✖** = left), a **Standard Work Combination Table** per operator
+(manual / auto-wait / walk against takt), work-element statistics with spread, a
 **Yamazumi** labour-balance chart, and a **spaghetti** movement diagram.
+
+```bash
+python -m mstudy steps input\cutting_line.mp4
+```
+
+Prints the text breakdown — every step each worker performed, in order, with its
+start time, duration, and any stop inside it.
 
 ---
 

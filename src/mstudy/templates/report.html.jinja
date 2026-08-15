@@ -49,6 +49,12 @@
     background: #fff8e6; border: 1px solid #f0d9a0; border-left: 4px solid var(--warn);
     padding: 11px 14px; border-radius: 7px; margin: 14px 0; font-size: 13.5px;
   }
+  pre.breakdown {
+    background: #12161a; color: #dfe6ec; padding: 16px 18px; border-radius: 8px;
+    overflow-x: auto; font-size: 12px; line-height: 1.45;
+    font-family: "Cascadia Mono", Consolas, "Courier New", monospace;
+  }
+  code { background: var(--panel); padding: 1px 5px; border-radius: 4px; font-size: 92%; }
   .legend-key { font-size: 13px; color: var(--muted); margin-top: 6px; }
   .legend-key b { color: var(--ink); }
   footer { margin-top: 52px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; }
@@ -117,6 +123,45 @@
 <h2>Cycle times</h2>
 <div class="scroll">{{ table_cycles|safe }}</div>
 
+<h2>Standard Work Combination Table</h2>
+<p class="lede">
+  One chart per operator, showing a single repeatable cycle broken into its elements
+  and averaged across every cycle observed.
+  <b style="color:#0072B2">━━ Manual</b> is the operator's hands on the work.
+  <b style="color:#E69F00">- - Auto / wait</b> is the operator present at the station but
+  not moving.
+  <b style="color:#009E73">∿∿ Walk</b> is transport, charged to the element it follows.
+  {% if takt_seconds %}The heavy red line is <b>takt</b> — demand rate. Anything to the
+  right of it is a cycle that cannot keep up.{% endif %}
+</p>
+<div class="note">
+  <b>What "auto / wait" does and does not mean.</b> A classic Standard Work Combination
+  Table separates <em>machine</em> time (the press is cycling, the operator is genuinely
+  free) from <em>waiting</em> (avoidable). Video cannot tell those apart — both look like a
+  person standing still at a station. This chart reports the honest measurement,
+  "operator not moving at the station", and leaves the split to whoever knows the
+  equipment cycle times. Do not present that column as machine time without checking.
+</div>
+
+{% for block in swct_blocks %}
+  <h3 style="margin:26px 0 2px;font-size:16px;">
+    {{ block.worker }}
+    <span style="font-weight:400;color:#5d666f;font-size:13.5px;">
+      — cycle {{ "%.1f"|format(block.cycle_s) }}s, averaged over {{ block.observations }}
+      observed cycle{{ "s" if block.observations != 1 }}
+    </span>
+  </h3>
+  {{ block.html|safe }}
+{% else %}
+  <p class="empty">No standard work data. Set <code>cycles.boundary_zone</code> in the config.</p>
+{% endfor %}
+
+<h3 style="font-size:16px;margin-top:26px;">Totals per operator</h3>
+<div class="scroll">{{ table_swct_totals|safe }}</div>
+
+<h3 style="font-size:16px;margin-top:22px;">Element detail</h3>
+<div class="scroll">{{ table_swct|safe }}</div>
+
 <h2>Labour balance (Yamazumi)</h2>
 <p class="lede">
   Work content per operator, per cycle. Uneven columns mean the line is unbalanced:
@@ -131,6 +176,17 @@
 <h2>Event log</h2>
 <p class="lede">Every stop and departure, in order.</p>
 <div class="scroll">{{ table_events|safe }}</div>
+
+<h2>Full step breakdown (text)</h2>
+<p class="lede">
+  Every step each worker performed, in order, with its start time and duration —
+  the same content as <code>steps.txt</code> in this run folder. This is the listing to
+  check against what you saw on the floor.
+</p>
+<details>
+  <summary style="cursor:pointer;font-weight:600;padding:8px 0;">Show the full listing</summary>
+  <pre class="breakdown">{{ breakdown_text }}</pre>
+</details>
 
 <footer>
   Analysed at {{ analysis_fps }} fps (pose {{ pose_fps }} fps).

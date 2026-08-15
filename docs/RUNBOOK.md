@@ -154,8 +154,39 @@ percentage of the mean. A slow step is usually already known about; an
 time on camera, not of the whole recording, so a worker who appears late is not
 penalised.
 
+**Standard Work Combination Table (SWCT).** One chart per operator showing a
+single repeatable cycle, averaged over every cycle observed. Each element is
+split three ways:
+
+| Line | Means |
+|---|---|
+| **━━ solid blue — Manual** | the operator's hands are on the work |
+| **- - dashed amber — Auto / wait** | the operator is at the station but not moving |
+| **∿∿ green zigzag — Walk** | transport, charged to the element it follows |
+
+The heavy red vertical line is **takt** (your demand rate — set
+`time_study.takt_seconds` in the config). Any operator whose bar runs past it
+cannot keep up with demand, and the chart shades the overrun.
+
+**Important about the "auto / wait" column.** A classic SWCT separates *machine*
+time — the press is cycling and the operator is genuinely free — from *waiting*,
+which is waste. **Video cannot tell those apart**: both look like a person
+standing still at a station. This system reports the honest measurement,
+"operator not moving at the station", and leaves the split to whoever knows the
+equipment cycle times. Do not present that column to management as machine time
+without checking it against real cycle times first.
+
 **Yamazumi.** Work content per operator per cycle. Uneven columns mean the line
 is unbalanced — the tallest column sets the pace and everyone else waits.
+
+**`steps.txt` — the text breakdown.** Every step, in order, with start time and
+duration, plus per-element summaries labelled *consistent* (spread under 10%),
+*variable* (10–25%) or *UNSTABLE* (over 25%). This is the listing to read side by
+side with the video when checking the system's work.
+
+```bash
+python -m mstudy steps input\your_video.mp4
+```
 
 **Spaghetti diagram.** Movement paths. Dense tangles are walking that the layout
 is forcing.

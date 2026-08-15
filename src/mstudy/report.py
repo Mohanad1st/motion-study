@@ -334,6 +334,9 @@ def render_report(
     cycle_stats: pd.DataFrame,
     yamazumi: pd.DataFrame,
     headline: dict,
+    swct: pd.DataFrame,
+    swct_totals: pd.DataFrame,
+    breakdown_text: str,
     background_png: bytes | None,
     frame_size: tuple[int, int],
     generated_at: str,
@@ -349,6 +352,21 @@ def render_report(
     gantt_step = build_gantt(segments, stops, duration_s, colour_by="step")
     spaghetti = build_spaghetti(tracks, background_png, *frame_size)
     yama = build_yamazumi(yamazumi, cfg.time_study.takt_seconds)
+
+    # One Standard Work Combination chart per operator - standard work describes
+    # one person's repeatable cycle, so they are never merged onto one axis.
+    from .swct import swct_figure
+
+    swct_blocks = []
+    for worker in (sorted(swct["worker"].unique()) if not swct.empty else []):
+        fig = swct_figure(swct, worker, cfg.time_study.takt_seconds)
+        rows = swct[swct["worker"] == worker]
+        swct_blocks.append({
+            "worker": worker,
+            "html": _fig_html(fig, include_js=False),
+            "cycle_s": float(rows["element_total_s"].sum()),
+            "observations": int(rows["observations"].max()) if len(rows) else 0,
+        })
 
     events = pd.concat(
         [
@@ -385,6 +403,13 @@ def render_report(
         gantt_step=_fig_html(gantt_step, include_js=False),
         spaghetti=_fig_html(spaghetti, include_js=False),
         yamazumi=_fig_html(yama, include_js=False),
+        swct_blocks=swct_blocks,
+        takt_seconds=cfg.time_study.takt_seconds,
+        breakdown_text=breakdown_text,
+        table_swct=_table(swct, {
+            "manual_s": 1, "auto_s": 1, "walk_s": 1, "start_s": 1,
+            "element_total_s": 1, "cumulative_s": 1}),
+        table_swct_totals=_table(swct_totals),
         table_steps=_table(step_stats, {
             "mean_s": 1, "median_s": 1, "min_s": 1, "max_s": 1, "std_s": 1,
             "cv_percent": 0, "total_s": 1, "normal_s": 1, "standard_s": 1}),

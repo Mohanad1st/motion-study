@@ -13,6 +13,7 @@ from pathlib import Path
 import pandas as pd
 
 from . import __version__
+from .breakdown import build_text
 from .config import Config
 from .cycles import assign_cycle_numbers, detect_cycles
 from .events import analyse
@@ -20,6 +21,7 @@ from .metrics import (
     cycle_statistics, headline, step_statistics, worker_statistics, yamazumi_table,
 )
 from .report import render_report
+from .swct import build_swct, swct_summary, swct_text
 
 
 def _warnings(cfg: Config, segments: pd.DataFrame, tracks: pd.DataFrame,
@@ -95,12 +97,33 @@ def run_study(
     yama = yamazumi_table(segments, cycles)
     head = headline(workers, steps, cyc_stats)
 
+    takt = cfg.time_study.takt_seconds
+    swct = build_swct(segments, stops, cycles, cfg)
+    swct_totals = swct_summary(swct, takt)
+
     # Raw tables, so the IE team can pivot the numbers themselves.
     segments.to_csv(out_dir / "segments.csv", index=False)
     stops.to_csv(out_dir / "stops.csv", index=False)
     steps.to_csv(out_dir / "step_statistics.csv", index=False)
     workers.to_csv(out_dir / "worker_statistics.csv", index=False)
     cycles.to_csv(out_dir / "cycles.csv", index=False)
+    swct.to_csv(out_dir / "standard_work_combination.csv", index=False)
+
+    # Plain-text breakdown: every step, in order, with its time.
+    breakdown = build_text(
+        segments=segments, stops=stops, cycles=cycles, step_stats=steps,
+        worker_stats=workers, cfg=cfg, video_name=video_name, duration_s=duration_s,
+    )
+    breakdown += (
+        "\n" + "=" * 96 + "\n STANDARD WORK COMBINATION TABLE\n" + "=" * 96 + "\n"
+        "\n   Manual    = operator's hands are on the work\n"
+        "   Auto/wait = operator present at the station but not moving. Video cannot\n"
+        "               separate machine cycle time from avoidable waiting - that split\n"
+        "               is a judgement for whoever knows the equipment cycle times.\n"
+        "   Walk      = transport between stations, attributed to the element it follows\n"
+        + swct_text(swct, takt)
+    )
+    (out_dir / "steps.txt").write_text(breakdown, encoding="utf-8")
 
     with (out_dir / "events.jsonl").open("w", encoding="utf-8") as fh:
         for _, r in segments.iterrows():
@@ -126,6 +149,7 @@ def run_study(
         segments=segments, stops=stops, tracks=tracks,
         step_stats=steps, worker_stats=workers, cycle_stats=cyc_stats,
         yamazumi=yama, headline=head,
+        swct=swct, swct_totals=swct_totals, breakdown_text=breakdown,
         background_png=background_png, frame_size=frame_size,
         generated_at=generated_at,
         warnings=_warnings(cfg, segments, tracks, cycles, duration_s),
@@ -145,4 +169,6 @@ def run_study(
         "report": report_path, "segments": segments, "stops": stops,
         "steps": steps, "workers": workers, "cycles": cycles,
         "timeline": timeline, "headline": head,
+        "swct": swct, "swct_totals": swct_totals,
+        "steps_txt": out_dir / "steps.txt", "breakdown": breakdown,
     }

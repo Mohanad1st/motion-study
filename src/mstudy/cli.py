@@ -32,6 +32,17 @@ def _print_summary(res: dict) -> None:
         t.add_row("Mean cycle time", f"{head['mean_cycle_s']:.1f}s")
     console.print(t)
 
+    totals = res.get("swct_totals")
+    if totals is not None and not totals.empty:
+        console.print("\n[bold]Standard work combination[/bold]")
+        swt = Table("Operator", "Manual", "Auto/wait", "Walk", "Cycle", "vs takt")
+        for _, r in totals.iterrows():
+            swt.add_row(
+                str(r["worker"]), f"{r['manual_s']:.0f}s", f"{r['auto_wait_s']:.0f}s",
+                f"{r['walk_s']:.0f}s", f"{r['cycle_s']:.0f}s", str(r["vs_takt"]),
+            )
+        console.print(swt)
+
 
 @app.command()
 def demo(
@@ -143,6 +154,21 @@ def report(
     )
     _print_summary(res)
     console.print(f"\n[green]Report:[/green] {res['report'].resolve()}")
+
+
+@app.command()
+def steps(
+    video: Path = typer.Argument(..., help="Video whose breakdown to print."),
+) -> None:
+    """Print the labour step breakdown: every step, in order, with its time."""
+    path = _run_dir(video) / "steps.txt"
+    if not path.exists():
+        console.print(
+            f"[red]No breakdown at {path}.[/red] Run `mstudy report` (or `mstudy run`) first."
+        )
+        raise typer.Exit(1)
+    # Printed raw: it is fixed-width text and rich markup would mangle it.
+    print(path.read_text(encoding="utf-8"))
 
 
 @app.command()
