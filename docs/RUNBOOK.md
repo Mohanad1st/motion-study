@@ -18,7 +18,7 @@ camera does not move. Everything else follows from that.
 | **Fixed tripod. Never handheld.** | A moving camera invalidates every zone, and every number downstream is then wrong without looking wrong. |
 | **Do not move, pan or zoom mid-recording.** | Same reason. If you must reposition, stop recording and start a new file — one file per camera position. |
 | **Get the whole operation in frame**, including the aisle workers walk through. | Anything outside the frame is reported as "left", which inflates idle time and starts arguments. |
-| **Mount high — a ceiling corner or a mezzanine beats eye level.** | Steel stock, jigs and racks hide workers at eye level. Occlusion is the single biggest accuracy limit. |
+| **Mount high — a ceiling corner or a mezzanine beats eye level.** | Stock, jigs and racks hide workers at eye level. Occlusion is the single biggest accuracy limit. |
 | **Keep the station well lit; avoid shooting into a bright doorway.** | A backlit worker becomes a silhouette the detector misses. |
 | **Record at least 5–6 full cycles.** | Fewer than 5 and the spread statistics mean nothing. |
 | **1080p at 25–30 fps is plenty.** | 4K costs processing time and buys nothing — we analyse at 2 fps. |
@@ -31,18 +31,12 @@ two angles, that is two config files.
 
 ## 2. First-time setup
 
-Already done on this machine, but for a new one:
-
-```bash
-winget install Python.Python.3.12 --architecture x64
-```
+On a new machine — Python 3.11 or newer, then from the repository root:
 
 ```bash
 python -m venv .venv
-```
-
-```bash
-.venv\Scripts\python.exe -m pip install -e .
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -e .
 ```
 
 Model weights (~40 MB) download automatically on the first run and are cached.
@@ -51,12 +45,12 @@ Model weights (~40 MB) download automatically on the first run and are cached.
 
 ## 3. Running a study
 
-### Step 1 — Drop the video in `input\`
+### Step 1 — Drop the video in `input/`
 
 ### Step 2 — Draw the stations (once per camera position)
 
 ```bash
-python -m mstudy zones input\your_video.mp4 -c configs\your_line.yaml
+python -m mstudy zones input/your_video.mp4 -c configs/your_line.yaml
 ```
 
 A window opens on a frame from the video. Click to place points, **ENTER** to
@@ -76,7 +70,7 @@ Then open the config and fill in:
 ### Step 3 — Check the setup before committing an hour
 
 ```bash
-python -m mstudy track input\your_video.mp4 -c configs\your_line.yaml --quick
+python -m mstudy track input/your_video.mp4 -c configs/your_line.yaml --quick
 ```
 
 Processes the first 2 minutes only. Confirm workers are being detected before
@@ -85,19 +79,19 @@ running the full job.
 ### Step 4 — The full run
 
 ```bash
-python -m mstudy run input\your_video.mp4 -c configs\your_line.yaml
+python -m mstudy run input/your_video.mp4 -c configs/your_line.yaml
 ```
 
 This tracks, asks you to name the workers, and writes the report. It is
 resumable — if it is interrupted, run the same command again and it picks up
 from the last checkpoint.
 
-### Step 5 — Read `runs\<video-name>\report.html`
+### Step 5 — Read `runs/<video-name>/report.html`
 
 Optional, and worth it for the first few videos:
 
 ```bash
-python -m mstudy annotate input\your_video.mp4 -c configs\your_line.yaml --max-seconds 120
+python -m mstudy annotate input/your_video.mp4 -c configs/your_line.yaml --max-seconds 120
 ```
 
 Two minutes of your own footage with the labels burned in. Watch it. If the
@@ -106,16 +100,16 @@ labels are right there, the numbers are right everywhere.
 ### Unattended batch
 
 ```bash
-python -m mstudy watch -c configs\your_line.yaml
+python -m mstudy watch -c configs/your_line.yaml
 ```
 
-Watches `input\` and processes anything new. Leave it running overnight.
+Watches `input/` and processes anything new. Leave it running overnight.
 
 ---
 
 ## 4. How long it takes
 
-Measured on this machine (Snapdragon X, x64 emulation, CPU only, `lightweight`
+Measured on the reference machine (Snapdragon X, x64 emulation, CPU only, `lightweight`
 models, 1280×720 footage):
 
 | | Measured |
@@ -132,7 +126,7 @@ cost, and it is why the pipeline is resumable and has a `watch` mode.
 roughly tenfold with **no code change**: install `onnxruntime-gpu` and set
 `detection.device: cuda` in the config.
 
-**To go faster on this machine**, in order of what actually helps:
+**To go faster on a CPU-only machine**, in order of what actually helps:
 1. `video.analysis_fps: 1.0` — halves the work; still 1 s resolution
 2. `video.pose_fps: 0.5` — cheaper, but slower to notice a stop starting
 3. Film at 720p rather than 1080p — less decoding
@@ -185,7 +179,7 @@ duration, plus per-element summaries labelled *consistent* (spread under 10%),
 side with the video when checking the system's work.
 
 ```bash
-python -m mstudy steps input\your_video.mp4
+python -m mstudy steps input/your_video.mp4
 ```
 
 **Spaghetti diagram.** Movement paths. Dense tangles are walking that the layout
@@ -216,7 +210,7 @@ system.**
 
 1. Pick one video. Watch it with a stopwatch and hand-time **3 complete cycles**,
    element by element.
-2. Open `runs\<video>\segments.csv` and pull the same elements.
+2. Open `runs/<video>/segments.csv` and pull the same elements.
 3. Compare.
 
 **Acceptance gate: within ±5% on element durations.** If it misses, tune — do
@@ -234,7 +228,7 @@ not lower the bar:
 After any change:
 
 ```bash
-python -m mstudy report input\your_video.mp4 -c configs\your_line.yaml
+python -m mstudy report input/your_video.mp4 -c configs/your_line.yaml
 ```
 
 That rebuilds the report from the saved tracks in seconds — it does **not**
@@ -257,7 +251,7 @@ them.
 **"Could not open video."** Re-encode it:
 
 ```bash
-ffmpeg -i input\your_video.mp4 -c:v libx264 -an input\fixed.mp4
+ffmpeg -i input/your_video.mp4 -c:v libx264 -an input/fixed.mp4
 ```
 
 **The camera got bumped mid-recording.** Split the file at that point and treat
@@ -268,6 +262,6 @@ for both.
 
 ## 8. Privacy
 
-Footage of identifiable workers stays on this machine. `input\` and `runs\` are
+Footage of identifiable workers stays on this machine. `input/` and `runs/` are
 git-ignored, so no video and no analysis output is ever committed. Nothing is
 uploaded anywhere — all processing is local.

@@ -1,5 +1,6 @@
 # Employee footage and analysis outputs NEVER get committed.
-input/
+input/*
+!input/.gitkeep
 runs/
 *.mp4
 *.mov
