@@ -37,11 +37,16 @@ camera in a workshop is not recoverable once people conclude they are being scor
 
 ## See it before filming anything
 
+A live copy of the report this produces, generated from the built-in synthetic demo, with nothing to
+install: **<https://motion-study-demo.vercel.app>**
+
+To generate your own:
+
 ```bash
 python -m mstudy demo
 ```
 
-Builds a complete report from a synthetic three-worker line — no video, no models, no GPU, no
+Builds the same complete report from a synthetic three-worker line — no video, no models, no GPU, no
 network. Opens at `runs/demo/report.html`.
 
 ![The generated demo report: the rating-factor banner, headline figures, and the per-worker operation timeline](assets/demo-report.png)
@@ -197,6 +202,19 @@ judgement you attach to its output.
 
 Footage of identifiable workers never leaves the machine that processes it: `input/` and `runs/` are
 gitignored, nothing is uploaded, and no model call leaves the host.
+
+## Contributing
+
+Bugs, other domains, speed work and report clarity are all welcome — see
+[CONTRIBUTING.md](CONTRIBUTING.md). The one closed door is performance rating; the reasoning is at
+the top of this README.
+
+The most useful thing anyone could contribute is a measured detection-accuracy number on real,
+hand-labelled footage, which is the gap named above.
+
+Security and privacy reports go through [SECURITY.md](SECURITY.md), not public issues — the privacy
+boundary around footage of identifiable workers matters more here than any conventional
+vulnerability. [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) is the Contributor Covenant 2.1.
 
 ## License
 
