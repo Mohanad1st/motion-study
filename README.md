@@ -5,7 +5,7 @@ production operation, run one command, get an interactive report: per-worker pro
 work elements across the operation timeline, detected stops and departures, cycle times, labour
 balance and movement paths.
 
-It does not rate the worker. That is the point.
+It does not rate the worker.
 
 ## Why it refuses to rate
 
@@ -13,7 +13,7 @@ A time study has two halves. The first is observation — what happened, when, f
 order. The second is **performance rating**: the analyst's judgement that the operator was working
 at, say, 95% of a normal pace, which converts an observed time into a standard time.
 
-This system does the first half and refuses the second, permanently.
+This system does the first half and leaves the second to a person.
 
 - **It cannot see effort.** A camera can measure that a worker's hands were still for a few seconds.
   It cannot see whether they were catching their breath, waiting on an upstream machine, thinking
@@ -25,8 +25,8 @@ This system does the first half and refuses the second, permanently.
   rating attributable to "the software" cannot be challenged, only resented.
 - **The failure mode should be a visible gap, not a confident number.** So the rating factor comes
   from your config (default 1.00, normal pace), and every report prints the value used, on the face
-  of it. A reader can always see which
-  human judgement the standard time rests on.
+  of it, and says that a qualified observer has to set it. Nothing is valid until a person stands
+  behind that number.
 
 The machine's job is narrowed to the thing it is actually reliable at: watching a long video without
 getting bored, and counting. The judgement that carries consequence stays with a person.
@@ -179,8 +179,7 @@ The direct dependencies:
 | NumPy · pandas · Jinja2 | BSD |
 | **motion-study itself** | **Apache-2.0** |
 
-This is a deliberate constraint, and it is the practical reason to choose this over a weekend
-project built on the usual stack.
+This is a deliberate constraint.
 
 Much computer-vision tooling reaches for Ultralytics YOLO by default. Ultralytics is **AGPL-3.0**,
 which requires releasing the source of a derivative you distribute, or that users interact with over
