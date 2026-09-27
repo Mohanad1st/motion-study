@@ -51,6 +51,13 @@ network. Opens at `runs/demo/report.html`.
 
 ![The generated demo report: the rating-factor banner, headline figures, and the per-worker operation timeline](assets/demo-report.png)
 
+### Before you film anyone
+
+Film only with the informed agreement of the people on camera, and of their representatives where
+they exist. Tell them what is measured (the operation, not the person), that no performance rating
+is produced, who will see the footage, and when it will be deleted. See the filming and storage
+guidance in [docs/RUNBOOK.md](docs/RUNBOOK.md).
+
 *The banner at the top of every report is not decoration — it is the rating factor the standard times
 rest on, printed where a reader cannot miss it. Below the timeline the report continues with work
 element statistics, a Standard Work Combination Table, a Yamazumi balance chart and a spaghetti
