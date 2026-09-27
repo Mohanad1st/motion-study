@@ -15,7 +15,7 @@ at, say, 95% of a normal pace, which converts an observed time into a standard t
 
 This system does the first half and refuses the second, permanently.
 
-- **It cannot see effort.** A camera can measure that a worker's hands were still for 4.2 seconds.
+- **It cannot see effort.** A camera can measure that a worker's hands were still for a few seconds.
   It cannot see whether they were catching their breath, waiting on an upstream machine, thinking
   through a fixture, or coasting. Every one of those looks identical in pixels, and they mean
   entirely different things to a standard time.
@@ -23,8 +23,9 @@ This system does the first half and refuses the second, permanently.
   targets, and targets are argued about — by supervisors, by operators, sometimes by a union. A
   rating attributable to a named industrial engineer can be challenged, explained, and revised. A
   rating attributable to "the software" cannot be challenged, only resented.
-- **The failure mode should be a visible gap, not a confident number.** So you supply the rating
-  factor, and every report prints the value used, on the face of it. A reader can always see which
+- **The failure mode should be a visible gap, not a confident number.** So the rating factor comes
+  from your config (default 1.00, normal pace), and every report prints the value used, on the face
+  of it. A reader can always see which
   human judgement the standard time rests on.
 
 The machine's job is narrowed to the thing it is actually reliable at: watching a long video without
@@ -55,8 +56,8 @@ network. Opens at `runs/demo/report.html`.
 
 Film only with the informed agreement of the people on camera, and of their representatives where
 they exist. Tell them what is measured (the operation, not the person), that no performance rating
-is produced, who will see the footage, and when it will be deleted. See the filming and storage
-guidance in [docs/RUNBOOK.md](docs/RUNBOOK.md).
+is produced, who will see the footage, and when it will be deleted. See the filming guidance and
+the privacy section in [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
 *The banner at the top of every report is not decoration — it is the rating factor the standard times
 rest on, printed where a reader cannot miss it. Below the timeline the report continues with work
@@ -73,7 +74,7 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -e .
 ```
 
-That is everything `python -m mstudy demo` needs. Model weights (~40 MB) download automatically the
+That is everything `python -m mstudy demo` needs. Model weights (tens of MB, depending on the detection mode) download automatically the
 first time you process an actual video, and are cached afterwards.
 
 One platform note, because it costs an hour to work out: **on Windows-on-ARM, use an x64 Python.**
@@ -148,7 +149,7 @@ them:
 
 - **The analysis half is validated against ground truth.** `tests/test_demo_accuracy.py` generates
   synthetic tracks whose stops, departures, element times and cycle times are known exactly, then
-  asserts the pipeline recovers them. When the segmentation, stop detection or cycle maths is wrong,
+  asserts the pipeline recovers them within stated tolerances. When the segmentation, stop detection or cycle maths is wrong,
   those tests fail.
 - **The detection half is not.** Detection and tracking accuracy on real workshop footage — how
   often YOLOX misses a worker behind a rack, how often ByteTrack swaps two identities — has not been
@@ -159,10 +160,11 @@ and compare them against the report before anyone sets a target from it.
 
 ## Licensing: nothing here is AGPL
 
-**There is no AGPL and no GPL anywhere in this project's dependency tree.** That is verified, not
-assumed: the claim was checked by resolving the full tree — 49 packages including transitive
-dependencies — and reading each one's declared licence. The strongest copyleft present is MPL-2.0,
-in `certifi` and `tqdm`, which is file-level and reaches neither this project nor yours. Everything
+**No package in this project's dependency tree declares an AGPL or GPL licence.** That was checked
+by resolving the full tree, including transitive dependencies, and reading each one's declared
+licence. The strongest copyleft any package declares is MPL-2.0, in `certifi` and `tqdm`, which is
+file-level and reaches neither this project nor yours. One caveat on binaries: some wheels (PyAV,
+OpenCV) bundle FFmpeg codec libraries under LGPL or GPL terms. Everything
 else is Apache-2.0, MIT, BSD, PSF, ISC or MIT-CMU. There is no PyTorch.
 
 The direct dependencies:
@@ -180,14 +182,12 @@ The direct dependencies:
 This is a deliberate constraint, and it is the practical reason to choose this over a weekend
 project built on the usual stack.
 
-Most computer-vision tooling reaches for Ultralytics YOLO by default. Ultralytics is **AGPL-3.0**:
-if you build on it, the AGPL's network clause means distributing *or operating* the derivative work
-obliges you to release your whole source under AGPL-3.0 as well — or to buy an Enterprise licence.
-For a manufacturer, that is not a licensing footnote. It means the internal tooling wrapped around
-it, and potentially the systems it talks to, land in front of legal before anything can be deployed,
-and the usual answer is no.
+Much computer-vision tooling reaches for Ultralytics YOLO by default. Ultralytics is **AGPL-3.0**,
+which requires releasing the source of a derivative you distribute, or that users interact with over
+a network, unless you buy an Enterprise licence. For a manufacturer that is not a licensing footnote:
+it usually means a legal review before anything built on it can be deployed.
 
-Avoiding it costs a little accuracy at the detection step and buys the ability to actually put this
+Avoiding it may cost some detection accuracy (not measured here) and buys the ability to actually put this
 into a plant. `rtmlib` gives Apache-2.0 YOLOX and RTMPose weights over ONNX Runtime, which also
 happens to mean CPU-only inference works without a GPU budget.
 
