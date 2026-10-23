@@ -1,0 +1,2 @@
+Videos dropped here are never committed: .gitignore excludes everything in
+this directory except this file. See docs/RUNBOOK.md section 3.

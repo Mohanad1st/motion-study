@@ -1,0 +1,103 @@
+# ---------------------------------------------------------------------------
+# One config file = one CAMERA POSITION on one production line.
+#
+# The zone polygons are pixel coordinates, so this file is only valid while the
+# camera does not move. If the tripod gets bumped, re-run `mstudy zones`.
+#
+# Copy this file, rename it after the line and camera, then run:
+#   mstudy zones input\your_video.mp4 -c configs\your_line.yaml
+# ---------------------------------------------------------------------------
+
+camera_id: cutting_line_cam1
+description: Cutting bench and press, north bay
+
+video:
+  # Frames per second actually analysed. 2 fps = 0.5 s resolution, finer than
+  # any stopwatch operator, and roughly 12x cheaper than analysing every frame.
+  # Raise to 4 only if you are timing elements shorter than about 3 seconds.
+  analysis_fps: 2.0
+
+  # Pose estimation runs at this lower rate. Pose only exists to tell "working"
+  # from "stopped", and the shortest stop reported is 5 s, so 1 fps loses
+  # nothing while roughly halving total processing time.
+  pose_fps: 1.0
+
+  # 0, 90, 180 or 270 - only if the camera was mounted sideways.
+  rotate: 0
+
+detection:
+  # performance | balanced | lightweight
+  #   lightweight - fastest, use it for the first pass and for long recordings
+  #   balanced    - the default, noticeably slower on a CPU-only machine
+  #   performance - most accurate, realistically needs a GPU
+  mode: lightweight
+  min_confidence: 0.40
+
+# Drawn by `mstudy zones` - you should not need to edit these by hand.
+# kind: work    = a station where value is added (its time is a work element)
+# kind: walkway = an aisle or transport route (its time is counted as walking)
+#
+# Zones are tested IN ORDER, so list a specific station BEFORE any broad aisle
+# polygon that overlaps it.
+zones: []
+# zones:
+#   - name: Material rack
+#     kind: work
+#     polygon: [[60, 380], [240, 380], [240, 620], [60, 620]]
+#   - name: Aisle
+#     kind: walkway
+#     polygon: [[40, 170], [1240, 170], [1240, 360], [40, 360]]
+
+# Friendly work-element names for the report. Optional - without these the
+# station name is used. Give these the names your IE team already uses.
+steps: {}
+# steps:
+#   Material rack: Load tube
+#   Cutting bench: Cut to length
+#   Welding jig: Weld ledger blade
+
+events:
+  # Hysteresis. Ignore any apparent step change shorter than this, so a worker
+  # leaning across a boundary does not shred the Gantt chart into confetti.
+  min_segment_seconds: 1.5
+
+  # Motion is measured in BODY HEIGHTS PER SECOND of hand and forearm movement,
+  # so the same threshold works near and far from the camera.
+  # Lower it if genuine work is being reported as stopped;
+  # raise it if idle workers are being reported as working.
+  stop_motion_threshold: 0.08
+
+  # Only report a stop once it has lasted this long. Below ~5 s you are mostly
+  # measuring the natural pauses inside normal work.
+  stop_min_seconds: 5.0
+  motion_smoothing_seconds: 1.0
+
+  # A worker who steps out of a zone briefly has not "left".
+  left_min_seconds: 2.0
+
+  # Bridge short detection dropouts (someone passing behind stacked tube)
+  # instead of reporting them as departures.
+  missing_grace_seconds: 1.0
+
+cycles:
+  # A new cycle starts each time the worker re-enters this zone - normally
+  # wherever they pick up the next piece. Leave empty to skip cycle analysis.
+  boundary_zone:
+  min_cycle_seconds: 30.0
+
+time_study:
+  # THE RATING FACTOR IS A HUMAN JUDGEMENT AND THIS SYSTEM WILL NOT INVENT ONE.
+  # 1.00 means the observed workers were performing at a normal pace.
+  # A qualified observer sets this. The report always prints the value used.
+  rating_factor: 1.00
+
+  # PF&D allowances, as fractions. These are defaults, not your company's -
+  # replace them with whatever your standards actually specify.
+  allowances:
+    personal: 0.05
+    fatigue: 0.07
+    delay: 0.03
+
+  # Customer demand rate in seconds per piece. Optional - it draws the takt
+  # line on the Yamazumi (labour balance) chart.
+  takt_seconds:
